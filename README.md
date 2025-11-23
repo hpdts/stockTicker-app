@@ -6,4 +6,4 @@ npm run dev
 
 
 
-fix all the test and also cfreate tiocker wancher functionalyty
+fix all the test and also create ticker watcher functionality 
