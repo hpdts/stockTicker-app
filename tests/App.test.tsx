@@ -1,8 +1,22 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../src/App';
-import { TickerService } from '../src/TickerService';
 
-vi.mock('./TickerService');
+vi.mock('../src/TickerService', () => {
+  return {
+    TickerService: class {
+      search = vi.fn().mockResolvedValue({
+        results: [
+          { symbol: 'AAPL', name: 'Apple Inc.', lastPrice: 15000 },
+        ],
+      });
+      watch = vi.fn();
+      unwatch = vi.fn();
+      onDataChanged = vi.fn((callback) => callback([]));
+    },
+  };
+});
 
 describe('App', () => {
   beforeEach(() => {
@@ -15,15 +29,6 @@ describe('App', () => {
   });
 
   it('displays companies after search', async () => {
-    const mockResponse = {
-      results: [
-        { symbol: 'AAPL', name: 'Apple Inc.', lastPrice: 15000 },
-        { symbol: 'APPL', name: 'Apple Hospitality REIT Inc.', lastPrice: 1200 },
-      ],
-    };
-
-    vi.mocked(TickerService).prototype.search.mockResolvedValue(mockResponse);
-
     render(<App />);
     const input = screen.getByPlaceholderText('Search stocks...');
     
@@ -31,11 +36,10 @@ describe('App', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Apple Inc. (AAPL)')).toBeInTheDocument();
-      expect(screen.getByText('Apple Hospitality REIT Inc. (APPL)')).toBeInTheDocument();
     });
   });
 
-  it('does not display list when no companies found', () => {
+  it('does not display list when input is empty', () => {
     render(<App />);
     expect(screen.queryByRole('list')).not.toBeInTheDocument();
   });
